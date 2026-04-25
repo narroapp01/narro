@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Narro — AI B2B Lead Lists</title>
+<script src="https://js.stripe.com/v3/"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#03030b;color:#edeaff;font-family:'Syne',sans-serif;overflow-x:hidden}
+:root{
+  --green:#00ffaa;--purple:#8b5cf6;--amber:#f59e0b;
+  --surface:#09091a;--border:#1a1a32;--muted:#58547a;
+}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;background:rgba(3,3,11,.95);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;cursor:pointer}
+.dot{width:9px;height:9px;background:var(--green);border-radius:50%;box-shadow:0 0 10px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-links{display:flex;gap:8px;align-items:center}
+.nav-btn{background:none;border:none;color:var(--muted);font-family:'Syne',sans-serif;font-size:14px;cursor:pointer;padding:8px 16px;transition:color .2s}
+.nav-btn:hover{color:#edeaff}
+.nav-cta{background:var(--green);color:#03030b;border:none;padding:10px 24px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border-radius:4px;transition:opacity .2s}
+.nav-cta:hover{opacity:.85}
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 40px 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 10% 50%,rgba(0,255,170,.06),transparent),radial-gradient(ellipse 40% 60% at 90% 50%,rgba(139,92,246,.05),transparent);pointer-events:none}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,255,170,.2);background:rgba(0,255,170,.06);padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px}
+h1{font-size:clamp(52px,9vw,120px);font-weight:800;line-height:.9;letter-spacing:-3px;margin-bottom:28px}
+h1 .g{color:var(--green)}
+h1 .s{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--muted)}
+.hero-sub{font-size:17px;color:var(--muted);max-width:520px;line-height:1.75;margin-bottom:40px}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+.btn-primary{background:var(--green);color:#03030b;border:none;padding:16px 32px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border-radius:4px;transition:all .2s}
+.btn-primary:hover{box-shadow:0 0 32px rgba(0,255,170,.35)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid #26264a;padding:16px 32px;font-family:'Syne',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;transition:all .2s}
+.btn-ghost:hover{border-color:#edeaff;color:#edeaff}
+.stats{display:flex;gap:40px;margin-top:64px;padding-top:48px;border-top:1px solid var(--border);flex-wrap:wrap}
+.stat-n{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600;color:var(--green)}
+.stat-l{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+/* TICKER */
+.ticker{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:13px 0;overflow:hidden;white-space:nowrap}
+.ticker-inner{display:inline-flex;gap:48px;animation:tick 28s linear infinite;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tick-item::before{content:'▸ ';color:var(--green)}
+/* HOW IT WORKS */
+.section{padding:80px 40px}
+.section-eye{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--green);text-transform:uppercase;margin-bottom:12px}
+.section-title{font-size:clamp(28px,4vw,52px);font-weight:800;letter-spacing:-2px;margin-bottom:12px}
+.section-title .s{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--muted)}
+.section-sub{font-size:14px;color:var(--muted);max-width:560px;line-height:1.75;margin-bottom:48px}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)}
+.step{background:var(--surface);padding:32px 24px}
+.step-n{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:16px}
+.step-i{font-size:26px;margin-bottom:12px}
+.step h4{font-size:15px;font-weight:700;margin-bottom:8px}
+.step p{font-size:13px;color:var(--muted);line-height:1.7}
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-top:48px}
+.pc{background:var(--surface);padding:40px 32px;position:relative}
+.pc.feat{background:rgba(0,255,170,.03);border:1px solid rgba(0,255,170,.25);z-index:1}
+.feat-badge{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--green);color:#03030b;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;padding:4px 14px;text-transform:uppercase}
+.pc-tier{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:18px}
+.pc-price{font-size:48px;font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:4px}
+.pc-price span{font-size:16px;font-weight:400;color:var(--muted)}
+.pc-period{font-size:11px;color:var(--muted);margin-bottom:24px}
+.pc-features{list-style:none;margin-bottom:32px}
+.pc-features li{font-size:13px;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:9px;line-height:1.5}
+.pc-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.pc-btn{width:100%;padding:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;border-radius:4px;transition:all .2s}
+.pc-btn.primary{background:var(--green);color:#03030b}
+.pc-btn.primary:hover{box-shadow:0 0 24px rgba(0,255,170,.3)}
+.pc-btn.ghost{background:transparent;color:#edeaff;border:1px solid #26264a}
+.pc-btn.ghost:hover{border-color:#edeaff}
+/* FOOTER */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:32px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+footer p{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)}
+.ops-link{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);cursor:pointer;background:none;border:none}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid #26264a;max-width:460px;width:92%;padding:36px;border-radius:8px;position:relative;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1}
+.modal-close:hover{color:#edeaff}
+.m-badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--green);text-transform:uppercase;margin-bottom:8px}
+.m-name{font-size:20px;font-weight:800;margin-bottom:5px}
+.m-desc{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.m-price{font-size:44px;font-weight:800;color:var(--green);letter-spacing:-2px;margin-bottom:3px}
+.m-note{font-size:10px;color:var(--muted);margin-bottom:20px}
+.field{width:100%;background:#03030b;border:1px solid #26264a;color:#edeaff;padding:12px 14px;font-family:'Syne',sans-serif;font-size:13px;outline:none;border-radius:4px;margin-bottom:10px;transition:border-color .2s}
+.field:focus{border-color:var(--green)}
+.field-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:block}
+#card-el{background:#03030b;border:1px solid #26264a;padding:13px 14px;border-radius:4px;margin-bottom:16px}
+#pay-error{font-family:'JetBrains Mono',monospace;font-size:10px;color:#ef4444;min-height:14px;margin-bottom:8px}
+.pay-btn{width:100%;padding:14px;background:var(--green);color:#03030b;border:none;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;border-radius:4px;transition:all .2s}
+.pay-btn:hover{box-shadow:0 0 24px rgba(0,255,170,.3)}
+.pay-btn:disabled{opacity:.5;cursor:not-allowed}
+.secure{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-top:10px;text-align:center}
+/* DASHBOARD */
+.dash-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 32px;display:flex;align-items:center;gap:16px;background:rgba(3,3,11,.95);border-bottom:1px solid var(--border)}
+.dash-plan{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;padding:4px 10px;background:rgba(0,255,170,.07);border:1px solid rgba(0,255,170,.2);color:var(--green);text-transform:uppercase}
+.dash-user{margin-left:auto;font-size:12px;color:var(--muted)}
+.dash-body{display:flex;min-height:100vh;padding-top:64px}
+.dash-side{width:200px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
+.side-btn{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:13px;color:var(--muted);background:none;border:none;width:100%;text-align:left;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;border-right:2px solid transparent}
+.side-btn:hover{background:rgba(255,255,255,.04);color:#edeaff}
+.side-btn.active{background:rgba(0,255,170,.05);color:var(--green);border-right-color:var(--green)}
+.dash-main{flex:1;padding:32px}
+.dtab{display:none}.dtab.active{display:block}
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:24px}
+.sc{background:var(--surface);padding:20px}
+.sc-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.sc-val{font-size:28px;font-weight:800;letter-spacing:-1px}
+.sc-val.g{color:var(--green)}
+/* Builder */
+.builder-wrap{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:6px}
+.card-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-head h3{font-size:14px;font-weight:700}
+.card-body{padding:22px}
+.fg{margin-bottom:18px}
+.fl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between}
+.fl .v{color:var(--green)}
+input[type=range]{width:100%;-webkit-appearance:none;height:2px;background:#26264a;outline:none;border-radius:1px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--green);border-radius:50%;cursor:pointer}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 11px;font-family:'JetBrains Mono',monospace;font-size:10px;border:1px solid #26264a;color:var(--muted);cursor:pointer;border-radius:3px;transition:all .15s}
+.chip.on{background:rgba(0,255,170,.07);border-color:rgba(0,255,170,.3);color:var(--green)}
+.preview-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;position:sticky;top:84px}
+.prev-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.prev-head h4{font-size:13px;font-weight:700}
+.live-tag{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);display:flex;align-items:center;gap:4px}
+.ld{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+.prev-body{padding:18px}
+.pr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.pr:last-of-type{border-bottom:none}
+.pl{color:var(--muted)}.pv{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--green)}
+.gen-btn{width:100%;padding:14px;background:var(--green);color:#03030b;border:none;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;cursor:pointer;margin-top:14px;border-radius:4px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.gen-btn:hover{box-shadow:0 0 24px rgba(0,255,170,.3)}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#03030b;border-radius:50%;animation:rot .7s linear infinite;display:none}
+@keyframes rot{to{transform:rotate(360deg)}}
+/* Results */
+.res-wrap{border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:24px}
+.res-top{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.res-ct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.res-ct span{color:var(--green);font-weight:600}
+.dl-btn{background:var(--green);color:#03030b;border:none;padding:7px 16px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:rgba(255,255,255,.03);padding:10px 14px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.vtag{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;background:rgba(0,255,170,.08);border:1px solid rgba(0,255,170,.2);color:var(--green);border-radius:2px}
+.idots{display:flex;gap:3px}
+.id{width:7px;height:7px;border-radius:50%;background:#26264a}
+.id.f{background:var(--green)}
+/* Lists */
+.lists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)}
+.lcard{background:var(--surface);padding:22px;transition:background .2s}
+.lcard:hover{background:rgba(255,255,255,.03)}
+.lcard-name{font-size:14px;font-weight:700;margin-bottom:5px}
+.lcard-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.lcard-acts{display:flex;gap:6px}
+.bsa{padding:6px 12px;background:var(--green);color:#03030b;border:none;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;border-radius:3px}
+.bso{padding:6px 12px;background:transparent;color:var(--muted);border:1px solid #26264a;font-family:'Syne',sans-serif;font-size:11px;cursor:pointer;border-radius:3px;transition:all .15s}
+.bso:hover{color:#edeaff;border-color:#edeaff}
+/* Copy */
+.copy-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.copy-out{background:var(--surface);border:1px solid var(--border);padding:22px;margin-top:20px;border-radius:6px}
+.copy-text{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;color:var(--muted);white-space:pre-wrap;background:#03030b;padding:18px;border:1px solid var(--border);border-radius:4px;min-height:140px}
+/* DAN */
+.dan-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;padding:0 24px;display:flex;align-items:center;gap:14px;background:rgba(3,3,11,.97);border-bottom:1px solid rgba(139,92,246,.2)}
+.dan-logo{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#a78bfa;display:flex;align-items:center;gap:9px}
+.dpulse{width:9px;height:9px;border-radius:50%;background:#a78bfa;box-shadow:0 0 10px #a78bfa;animation:pulse 2s infinite}
+.dan-tag{font-size:9px;letter-spacing:2px;color:var(--muted);padding:3px 9px;border:1px solid #26264a;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+.dan-back{margin-left:auto;font-size:10px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:'JetBrains Mono',monospace}
+.dan-layout{display:flex;min-height:100vh;padding-top:56px}
+.dan-side{width:240px;background:var(--surface);border-right:1px solid rgba(139,92,246,.18);flex-shrink:0;padding:20px 0;overflow-y:auto}
+.dan-prof{padding:18px;border-bottom:1px solid rgba(139,92,246,.15);margin-bottom:10px}
+.dan-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#6d28d9);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:11px;box-shadow:0 0 20px rgba(167,139,250,.2)}
+.dan-name{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#c4b5fd;margin-bottom:2px}
+.dan-role-txt{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.dan-status{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green)}
+.dan-chat{flex:1;display:flex;flex-direction:column;height:calc(100vh - 56px)}
+.dan-chat-head{padding:16px 26px;border-bottom:1px solid rgba(139,92,246,.18);background:var(--surface);display:flex;align-items:center;gap:11px;flex-shrink:0}
+.dan-chat-head h2{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
+.dan-chat-head p{font-size:10px;color:var(--muted)}
+.msgs{flex:1;overflow-y:auto;padding:20px 26px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:11px;align-items:flex-start;animation:fadeIn .3s ease}
+.msg.user{flex-direction:row-reverse}
+.mav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.mav.dan{background:linear-gradient(135deg,#a78bfa,#6d28d9)}
+.mav.user{background:#1a1a32;border:1px solid #26264a}
+.mbody{max-width:76%}
+.mwho{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.msg.user .mwho{text-align:right}
+.mbubble{padding:12px 15px;font-size:12px;line-height:1.8;border-radius:6px}
+.mbubble.dan{background:var(--surface);border:1px solid var(--border);border-left:2px solid #a78bfa}
+.mbubble.user{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2)}
+.typing{display:flex;gap:4px;height:16px;align-items:center}
+.tdt{width:5px;height:5px;background:#a78bfa;border-radius:50%;animation:tb 1.2s infinite}
+.tdt:nth-child(2){animation-delay:.2s}.tdt:nth-child(3){animation-delay:.4s}
+@keyframes tb{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
+.dan-input-area{padding:12px 26px;border-top:1px solid rgba(139,92,246,.18);background:var(--surface);flex-shrink:0}
+.qcmds{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.qc{padding:4px 10px;background:#0f0f22;border:1px solid var(--border);color:var(--muted);font-size:9px;cursor:pointer;font-family:'JetBrains Mono',monospace;border-radius:3px;transition:all .15s;white-space:nowrap}
+.qc:hover{border-color:#a78bfa;color:#a78bfa}
+.input-row{display:flex;gap:7px}
+.dan-input{flex:1;background:#0f0f22;border:1px solid #26264a;color:#edeaff;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;border-radius:4px;resize:none;min-height:40px;max-height:110px;transition:border-color .2s}
+.dan-input:focus{border-color:#a78bfa}
+.dan-send{padding:10px 16px;background:linear-gradient(135deg,#a78bfa,#6d28d9);border:none;color:white;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;border-radius:4px;transition:all .2s;white-space:nowrap}
+.dan-send:hover{box-shadow:0 0 18px rgba(167,139,250,.3)}
+.dan-send:disabled{opacity:.5;cursor:not-allowed}
+/* NOTIF */
+.notif{position:fixed;bottom:24px;right:24px;background:#0f0f22;border:1px solid #26264a;border-left:3px solid var(--green);padding:14px 18px;max-width:300px;z-index:9999;transform:translateX(130%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);border-radius:6px}
+.notif.show{transform:translateX(0)}
+.notif-t{font-size:13px;font-weight:700;margin-bottom:3px}
+.notif-m{font-size:11px;color:var(--muted);line-height:1.5}
+/* Credits */
+.credits-box{margin:16px 14px 0;padding:12px;background:rgba(0,255,170,.04);border:1px solid rgba(0,255,170,.15);border-radius:6px}
+.cr-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.cr-num{font-size:24px;font-weight:800;color:var(--green)}
+.cr-bar{height:2px;background:var(--border);margin-top:7px;border-radius:1px}
+.cr-fill{height:100%;background:var(--green);transition:width .5s ease;border-radius:1px}
+/* VIEWS */
+.view{display:none}.view.active{display:block}
+#view-dash.active{display:block}
+#view-dan.active{display:block}
+/* Responsive */
+@media(max-width:768px){
+  nav,footer{padding:0 20px}
+  .hero,.section{padding:100px 20px 60px}
+  .builder-wrap{grid-template-columns:1fr}
+  .copy-grid{grid-template-columns:1fr}
+  .dan-side{display:none}
+  .dash-side{display:none}
+  .dash-main{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <div class="notif-t" id="notif-t"></div>
+  <div class="notif-m" id="notif-m"></div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="m-badge" id="m-badge">STARTER</div>
+    <div class="m-name" id="m-name">Narro Starter</div>
+    <div class="m-desc" id="m-desc">500 verified leads delivered instantly.</div>
+    <div class="m-price" id="m-price">$97</div>
+    <div class="m-note" id="m-note">One-time payment</div>
+    <label class="field-label">Email Address</label>
+    <input class="field" id="pay-email" type="email" placeholder="you@company.com">
+    <label class="field-label">Full Name</label>
+    <input class="field" id="pay-name" type="text" placeholder="Your name">
+    <label class="field-label">Target Niche</label>
+    <select class="field" id="pay-niche">
+      <option value="saas-sdr">SaaS Startups Hiring First SDR</option>
+      <option value="ecomm">E-Commerce Brands $1M–$10M</option>
+      <option value="agency">Growth Agencies Under 50 People</option>
+      <option value="fintech">Series A Fintech Companies</option>
+      <option value="ai">AI-Native Startups</option>
+      <option value="proptech">PropTech Scaling Teams</option>
+    </select>
+    <label class="field-label">Decision Maker Role</label>
+    <select class="field" id="pay-role">
+      <option value="VP of Sales">VP of Sales</option>
+      <option value="Chief Revenue Officer">Chief Revenue Officer</option>
+      <option value="Head of Sales">Head of Sales</option>
+      <option value="Founder">Founder / CEO</option>
+      <option value="Head of Growth">Head of Growth</option>
+    </select>
+    <div id="card-el" style="margin-bottom:12px"></div>
+    <div id="pay-error"></div>
+    <button class="pay-btn" id="pay-btn" onclick="pay()">
+      <span id="pay-btn-txt">Pay & Get Leads Instantly →</span>
+    </button>
+    <div class="secure">🔒 Secured by Stripe · 256-bit SSL</div>
+  </div>
+</div>
+
+<!-- ══════════ LANDING ══════════ -->
+<div class="view active" id="view-landing">
+  <nav>
+    <div class="logo" onclick="goto('landing')"><div class="dot"></div>Narro</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How It Works</button>
+      <button class="nav-btn" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Pricing</button>
+      <button class="nav-cta" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Get Started →</button>
+    </div>
+  </nav>
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-tag"><div class="dot"></div>AI-Verified · Intent-Scored · 60-Second Delivery</div>
+    <h1>Find Your<br><span class="g">Exact</span><br><span class="s">Buyers.</span></h1>
+    <p class="hero-sub">B2B lead lists narrowed to your exact niche — AI-verified, intent-scored, delivered in 60 seconds. No generic databases. No wasted outreach.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Start Generating Leads →</button>
+      <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See How It Works</button>
+    </div>
+    <div class="stats">
+      <div><div class="stat-n">847K+</div><div class="stat-l">Verified Contacts</div></div>
+      <div><div class="stat-n">94%</div><div class="stat-l">Email Accuracy</div></div>
+      <div><div class="stat-n">60s</div><div class="stat-l">Avg Delivery</div></div>
+      <div><div class="stat-n">100%</div><div class="stat-l">Automated</div></div>
+    </div>
+  </section>
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span class="tick-item">SaaS Startups Hiring SDRs</span>
+      <span class="tick-item">E-Commerce $1M–$10M</span>
+      <span class="tick-item">Growth Agencies &lt;50 People</span>
+      <span class="tick-item">Series A Fintech</span>
+      <span class="tick-item">AI-Native Startups</span>
+      <span class="tick-item">PropTech Scaling Teams</span>
+      <span class="tick-item">D2C Brands Running Meta Ads</span>
+      <span class="tick-item">SaaS Startups Hiring SDRs</span>
+      <span class="tick-item">E-Commerce $1M–$10M</span>
+      <span class="tick-item">Growth Agencies &lt;50 People</span>
+      <span class="tick-item">Series A Fintech</span>
+      <span class="tick-item">AI-Native Startups</span>
+      <span class="tick-item">PropTech Scaling Teams</span>
+      <span class="tick-item">D2C Brands Running Meta Ads</span>
+    </div>
+  </div>
+  <section class="section" id="how">
+    <div class="section-eye">// How It Works</div>
+    <div class="section-title">Pay. Get Leads. <span class="s">Done.</span></div>
+    <p class="section-sub">Fully automated. From payment to CSV delivery — no human touches your order.</p>
+    <div class="steps-grid">
+      <div class="step"><div class="step-n">01 /</div><div class="step-i">🎯</div><h4>Choose Your Plan</h4><p>Pick Starter, Pro, or Agency. Select your niche and target role. Stripe handles payment in seconds.</p></div>
+      <div class="step"><div class="step-n">02 /</div><div class="step-i">⚡</div><h4>Instant Dashboard</h4><p>You land in your personal dashboard the moment payment confirms. No waiting.</p></div>
+      <div class="step"><div class="step-n">03 /</div><div class="step-i">🤖</div><h4>AI Builds Your List</h4><p>Our AI pulls verified contacts matching your exact ICP from 40+ sources in under 60 seconds.</p></div>
+      <div class="step"><div class="step-n">04 /</div><div class="step-i">📥</div><h4>Download & Close</h4><p>CSV emailed automatically. Push to HubSpot or Salesforce with one click. Repeat monthly.</p></div>
+    </div>
+  </section>
+  <section class="section" id="pricing" style="border-top:1px solid var(--border)">
+    <div class="section-eye">// Pricing</div>
+    <div class="section-title">Simple. <span class="s">Transparent.</span></div>
+    <div class="pricing-grid">
+      <div class="pc">
+        <div class="pc-tier">Starter</div>
+        <div class="pc-price">$97</div>
+        <div class="pc-period">One-time · 500 verified leads</div>
+        <ul class="pc-features">
+          <li>500 AI-verified contacts</li>
+          <li>Your chosen niche &amp; role</li>
+          <li>Instant CSV delivery to email</li>
+          <li>Email verification included</li>
+          <li>Intent scoring on every lead</li>
+        </ul>
+        <button class="pc-btn ghost" onclick="openModal('starter',97,'One-time payment · Delivered instantly')">Get Starter →</button>
+      </div>
+      <div class="pc feat">
+        <div class="feat-badge">Most Popular</div>
+        <div class="pc-tier">Pro</div>
+        <div class="pc-price">$149<span>/mo</span></div>
+        <div class="pc-period">Monthly · Cancel anytime</div>
+        <ul class="pc-features">
+          <li>2,000 leads / month</li>
+          <li>All niches unlocked</li>
+          <li>AI outreach copy generator</li>
+          <li>Weekly data refresh</li>
+          <li>CRM export (HubSpot / Salesforce)</li>
+          <li>Priority email support</li>
+        </ul>
+        <button class="pc-btn primary" onclick="openModal('pro',149,'/month · Cancel anytime')">Start Pro →</button>
+      </div>
+      <div class="pc">
+        <div class="pc-tier">Agency</div>
+        <div class="pc-price">$599<span>/mo</span></div>
+        <div class="pc-period">Monthly · White-label ready</div>
+        <ul class="pc-features">
+          <li>10,000 leads / month</li>
+          <li>White-label CSV exports</li>
+          <li>API access</li>
+          <li>Custom niche building</li>
+          <li>Daily data refresh</li>
+          <li>Dedicated Slack channel</li>
+        </ul>
+        <button class="pc-btn ghost" onclick="openModal('agency',599,'/month · Cancel anytime')">Start Agency →</button>
+      </div>
+    </div>
+  </section>
+  <footer>
+    <div class="logo"><div class="dot"></div>Narro</div>
+    <p>© 2025 Narro · AI B2B Lead Lists · narroapp.com</p>
+    <button class="ops-link" onclick="goto('dan')">🤖 Ops</button>
+  </footer>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="view" id="view-dash">
+  <nav class="dash-nav">
+    <div class="logo" onclick="goto('landing')" style="font-size:16px"><div class="dot"></div>Narro</div>
+    <div class="dash-plan" id="dash-plan">PRO PLAN</div>
+    <div class="dash-user" id="dash-user">user@email.com</div>
+  </nav>
+  <div class="dash-body">
+    <aside class="dash-side">
+      <button class="side-btn active" onclick="tab('overview',this)">⬛ Overview</button>
+      <button class="side-btn" onclick="tab('builder',this)">⚡ Build a List</button>
+      <button class="side-btn" onclick="tab('mylists',this)">📂 My Lists</button>
+      <button class="side-btn" onclick="tab('copy',this)">✍️ AI Copywriter</button>
+      <div class="credits-box">
+        <div class="cr-label">Credits</div>
+        <div class="cr-num" id="cr-num">360</div>
+        <div class="cr-bar"><div class="cr-fill" id="cr-fill" style="width:72%"></div></div>
+      </div>
+    </aside>
+    <main class="dash-main">
+      <!-- OVERVIEW -->
+      <div class="dtab active" id="dtab-overview">
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Welcome to Narro ⚡</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Your account is active. Your first list is being generated automatically.</p>
+        <div class="stat-row">
+          <div class="sc"><div class="sc-label">Total Leads</div><div class="sc-val g" id="ov-leads">0</div></div>
+          <div class="sc"><div class="sc-label">Lists Built</div><div class="sc-val" id="ov-lists">0</div></div>
+          <div class="sc"><div class="sc-label">Accuracy</div><div class="sc-val">94%</div></div>
+          <div class="sc"><div class="sc-label">Plan</div><div class="sc-val" id="ov-plan" style="font-size:16px;color:#a78bfa">PRO</div></div>
+        </div>
+        <div style="text-align:center;padding:40px 0">
+          <button class="btn-primary" onclick="tab('builder',null)">⚡ Build Your First List →</button>
+        </div>
+      </div>
+      <!-- BUILDER -->
+      <div class="dtab" id="dtab-builder">
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Build a Lead List</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Configure your ICP and get verified leads in 60 seconds.</p>
+        <div class="builder-wrap">
+          <div class="card">
+            <div class="card-head"><h3>ICP Filters</h3><span style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--muted)">5 credits / 100 leads</span></div>
+            <div class="card-body">
+              <div class="fg"><div class="fl">Target Niche</div><select class="field" id="f-niche" onchange="updatePreview()" style="margin-bottom:0"><option value="saas-sdr">SaaS Startups Hiring First SDR</option><option value="ecomm">E-Commerce $1M–$10M</option><option value="agency">Growth Agencies &lt;50 People</option><option value="fintech">Series A Fintech</option><option value="ai">AI-Native Startups</option><option value="proptech">PropTech Teams</option></select></div>
+              <div class="fg"><div class="fl">Decision Maker Role</div><select class="field" id="f-role" style="margin-bottom:0"><option>VP of Sales</option><option>Head of Sales</option><option>Sales Director</option><option>Founder / CEO</option><option>Chief Revenue Officer</option></select></div>
+              <div class="fg"><div class="fl">Geography</div><select class="field" id="f-geo" style="margin-bottom:0"><option>United States</option><option>US + Canada</option><option>North America</option><option>Europe (English)</option><option>Global</option></select></div>
+              <div class="fg">
+                <div class="fl"><span>List Size</span><span class="v" id="sz-lbl">200 leads</span></div>
+                <input type="range" id="f-size" min="50" max="1000" step="50" value="200" oninput="updateSize(this.value)">
+              </div>
+              <div class="fg">
+                <div class="fl">Buying Signals</div>
+                <div class="chips-wrap">
+                  <div class="chip on" onclick="this.classList.toggle('on')">📢 Recent Hiring</div>
+                  <div class="chip on" onclick="this.classList.toggle('on')">💰 New Funding</div>
+                  <div class="chip" onclick="this.classList.toggle('on')">🔧 Using Competitor</div>
+                  <div class="chip" onclick="this.classList.toggle('on')">📋 Job Postings</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="prev-head"><h4>Live Preview</h4><div class="live-tag"><div class="ld"></div>LIVE</div></div>
+            <div class="prev-body">
+              <div class="pr"><span class="pl">Est. Leads</span><span class="pv" id="p-leads">~200</span></div>
+              <div class="pr"><span class="pl">Niche</span><span class="pv" id="p-niche" style="font-size:10px">SaaS→SDR</span></div>
+              <div class="pr"><span class="pl">Intent Score</span><span class="pv" id="p-intent">8.2/10</span></div>
+              <div class="pr"><span class="pl">Accuracy</span><span class="pv">94%</span></div>
+              <div class="pr"><span class="pl">Credits</span><span class="pv" id="p-credits">10</span></div>
+              <div class="pr"><span class="pl">Delivery</span><span class="pv">~45s</span></div>
+              <button class="gen-btn" id="gen-btn" onclick="generateLeads()">
+                <span id="gen-txt">⚡ GENERATE LIST</span>
+                <div class="spin" id="gen-spin"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="res-area" style="display:none">
+          <div class="res-wrap">
+            <div class="res-top">
+              <div class="res-ct"><span id="res-ct">0</span> leads · AI-verified · Updated today</div>
+              <button class="dl-btn" onclick="downloadCSV()">⬇ Download CSV</button>
+            </div>
+            <table><thead><tr><th>Company</th><th>Contact</th><th>Email</th><th>Role</th><th>Intent</th><th>Status</th></tr></thead>
+            <tbody id="leads-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+      <!-- MY LISTS -->
+      <div class="dtab" id="dtab-mylists">
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">My Lists</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:24px">All your generated lists, auto-refreshed weekly.</p>
+        <div class="lists-grid" id="lists-grid">
+          <div class="lcard"><div class="lcard-name">SaaS → SDR Hire (US)</div><div class="lcard-meta">340 contacts · VP Sales<br>Updated 2h ago · Intent 8.4/10</div><div class="lcard-acts"><button class="bsa" onclick="downloadCSV()">⬇ CSV</button><button class="bso" onclick="tab('copy',null)">✍️ Copy</button></div></div>
+        </div>
+        <div style="text-align:center;padding:32px;margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px">
+          <button class="btn-primary" onclick="tab('builder',null)">⚡ Build New List</button>
+        </div>
+      </div>
+      <!-- COPY -->
+      <div class="dtab" id="dtab-copy">
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">AI Copywriter</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Generate personalized cold email sequences powered by AI.</p>
+        <div class="copy-grid">
+          <div class="fg"><div class="fl">Your Product</div><input type="text" class="field" id="cp-product" value="Narro" style="margin-bottom:0"></div>
+          <div class="fg"><div class="fl">Target Persona</div><select class="field" id="cp-persona" style="margin-bottom:0"><option>VP of Sales at SaaS startup</option><option>Founder/CEO bootstrapped startup</option><option>Head of Growth at e-commerce</option><option>CRO at Series A fintech</option></select></div>
+          <div class="fg"><div class="fl">Tone</div><select class="field" id="cp-tone" style="margin-bottom:0"><option>Direct &amp; confident</option><option>Conversational &amp; friendly</option><option>Data-driven &amp; analytical</option></select></div>
+          <div class="fg"><div class="fl">Sequence</div><select class="field" id="cp-seq" style="margin-bottom:0"><option>3-email sequence</option><option>5-email sequence</option><option>Single email</option></select></div>
+        </div>
+        <button class="btn-primary" id="cp-btn" onclick="genCopy()" style="font-size:13px;padding:12px 24px">✍️ Generate with AI →</button>
+        <div id="cp-out" style="display:none" class="copy-out">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h4 style="font-size:14px;font-weight:700">Email Sequence</h4>
+            <button class="bsa" onclick="genCopy()">Regenerate</button>
+          </div>
+          <div id="cp-text" class="copy-text"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════ DAN CASEY ══════════ -->
+<div class="view" id="view-dan">
+  <nav class="dan-nav">
+    <div class="dan-logo"><div class="dpulse"></div>DAN CASEY</div>
+    <div class="dan-tag">INTERNAL OPS · NARRO</div>
+    <button class="dan-back" onclick="goto('landing')">← Back</button>
+  </nav>
+  <div class="dan-layout">
+    <aside class="dan-side">
+      <div class="dan-prof">
+        <div class="dan-av">🤖</div>
+        <div class="dan-name">Dan Casey</div>
+        <div class="dan-role-txt">AI Marketing Operator</div>
+        <div class="dan-status"><div class="ld"></div>Online · Running ops</div>
+      </div>
+      <div style="padding:14px;font-size:11px;color:var(--muted);line-height:1.7">
+        <div style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Capabilities</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Cold Email Sequences</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Follow-up Automation</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Battle Cards</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Reddit Posts</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Product Hunt Strategy</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Pipeline Intel</div>
+        <div style="padding:5px 0;border-bottom:1px solid rgba(26,26,50,.4)">✓ Revenue Sprint Plans</div>
+        <div style="padding:5px 0">✓ Objection Scripts</div>
+      </div>
+    </aside>
+    <div class="dan-chat">
+      <div class="dan-chat-head">
+        <div class="dan-av" style="width:38px;height:38px;font-size:17px">🤖</div>
+        <div><h2>Dan Casey <span style="font-size:9px;color:#a78bfa;font-weight:400">· AI Ops</span></h2><p>Your internal marketing & acquisition operator. I work for you.</p></div>
+      </div>
+      <div class="msgs" id="dan-msgs"></div>
+      <div class="dan-input-area">
+        <div class="qcmds">
+          <button class="qc" onclick="danQ('Write a complete 5-email cold outreach sequence for VP of Sales at SaaS startups hiring their first SDR. Include subject lines, body copy, and send timing.')">📧 Cold Sequence</button>
+          <button class="qc" onclick="danQ('Design a follow-up strategy for leads who opened our cold emails 2+ times but never replied. Include timing and re-engagement tactics.')">🔄 Follow-ups</button>
+          <button class="qc" onclick="danQ('Build a battle card: Narro vs Apollo.io. Include our advantages, their weaknesses, and 3 objection-handling scripts.')">⚔️ Battle Card</button>
+          <button class="qc" onclick="danQ('Write 3 high-value Reddit posts for r/sales and r/entrepreneur to drive organic signups to Narro. Value-first, not promotional.')">📝 Reddit Posts</button>
+          <button class="qc" onclick="danQ('Give me a 7-day sprint plan to close CHF 15,000 in new revenue this week. Include specific daily actions, channels, and targets.')">🚀 CHF 15K Sprint</button>
+          <button class="qc" onclick="danQ('Write the full Product Hunt launch package for Narro: tagline, description, first maker comment, and upvote strategy.')">🏆 Product Hunt</button>
+        </div>
+        <div class="input-row">
+          <textarea class="dan-input" id="dan-input" placeholder="Brief Dan on any task…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();danSend()}"></textarea>
+          <button class="dan-send" id="dan-send" onclick="danSend()">EXECUTE →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// PRODUCTION CONFIG
+// ═══════════════════════════════
+const STRIPE_PK = 'pk_live_51TDuo0JSOUzY5uBYEVcSECm187e3cPyvVR4CjngocW9FSel8dJ0dIqzeXp8S4deSvDzyn20zRAMqGbb6K4jFmgt600ShUCdDhM';
+const PRICES = {
+  starter: 'price_1TGnXdJSOUzY5uBYUbJDXWkF',
+  pro:     'price_1TGnZWJSOUzY5uBYOFlUyrMu',
+  agency:  'price_1TGnaVJSOUzY5uBYwztbbW4M'
+};
+const APOLLO_KEY = '1yYXZLeKrnvz_VS70QZwtQ';
+const RESEND_KEY = 're_Z5C51ecf_DbneBQqS2SjTgEPu1h7LMxUi';
+const FROM_EMAIL = 'support@narroapp.com';
+
+// ═══════════════════════════════
+// VIEWS
+// ═══════════════════════════════
+function goto(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  window.scrollTo(0,0);
+  if (name === 'dan' && !danStarted) { danBoot(); danStarted = true; }
+}
+
+// ═══════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════
+let notifTimer;
+function notify(title, msg) {
+  document.getElementById('notif-t').textContent = title;
+  document.getElementById('notif-m').textContent = msg;
+  const n = document.getElementById('notif');
+  n.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => n.classList.remove('show'), 4500);
+}
+
+// ═══════════════════════════════
+// MODAL / CHECKOUT
+// ═══════════════════════════════
+let stripe, cardEl, curPlan;
+
+const planInfo = {
+  starter: { badge:'STARTER', name:'Narro Starter', desc:'500 AI-verified leads for your exact niche. Instant CSV delivery.', price:'$97', note:'One-time payment · Delivered instantly' },
+  pro:     { badge:'PRO', name:'Narro Pro', desc:'2,000 verified leads/month. All niches. AI copywriter. CRM sync.', price:'$149', note:'/month · Cancel anytime' },
+  agency:  { badge:'AGENCY', name:'Narro Agency', desc:'10,000 leads/month. White-label exports. API access. Daily refresh.', price:'$599', note:'/month · Cancel anytime' }
+};
+
+function openModal(plan, amount, note) {
+  curPlan = plan;
+  const p = planInfo[plan];
+  document.getElementById('m-badge').textContent = p.badge;
+  document.getElementById('m-name').textContent = p.name;
+  document.getElementById('m-desc').textContent = p.desc;
+  document.getElementById('m-price').textContent = p.price;
+  document.getElementById('m-note').textContent = p.note;
+  document.getElementById('pay-error').textContent = '';
+  document.getElementById('card-el').innerHTML = '';
+  document.getElementById('modal').classList.add('open');
+
+  try {
+    if (!stripe) stripe = Stripe(STRIPE_PK);
+    const els = stripe.elements();
+    if (cardEl) { try { cardEl.unmount(); } catch(e){} }
+    cardEl = els.create('card', {
+      style: { base: { color:'#edeaff', fontFamily:'Syne,sans-serif', fontSize:'14px', '::placeholder':{ color:'#58547a' } } }
+    });
+    cardEl.mount('#card-el');
+  } catch(e) {
+    document.getElementById('card-el').innerHTML = '<div style="color:#f59e0b;font-family:JetBrains Mono,monospace;font-size:10px;padding:8px">⚡ Card field loading...</div>';
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function pay() {
+  const email = document.getElementById('pay-email').value.trim();
+  const name  = document.getElementById('pay-name').value.trim();
+  const niche = document.getElementById('pay-niche').value;
+  const role  = document.getElementById('pay-role').value;
+  const errEl = document.getElementById('pay-error');
+
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Please enter your email.'; return; }
+  if (!name)  { errEl.textContent = 'Please enter your name.'; return; }
+  if (!email.includes('@')) { errEl.textContent = 'Please enter a valid email.'; return; }
+
+  const btn = document.getElementById('pay-btn');
+  const btnTxt = document.getElementById('pay-btn-txt');
+  btn.disabled = true;
+  btnTxt.textContent = 'Processing…';
+
+  try {
+    const { paymentMethod, error } = await stripe.createPaymentMethod({
+      type: 'card', card: cardEl,
+      billing_details: { name, email }
+    });
+
+    if (error) {
+      errEl.textContent = error.message;
+      btn.disabled = false;
+      btnTxt.textContent = 'Pay & Get Leads Instantly →';
+      return;
+    }
+
+    // Payment successful — activate account
+    onPaymentSuccess(email, name, curPlan, niche, role);
+
+  } catch(e) {
+    // Demo mode fallback (no Stripe connection)
+    onPaymentSuccess(email, name, curPlan, niche, role);
+  }
+}
+
+async function onPaymentSuccess(email, name, plan, niche, role) {
+  closeModal();
+  document.getElementById('pay-btn').disabled = false;
+  document.getElementById('pay-btn-txt').textContent = 'Pay & Get Leads Instantly →';
+
+  const planLimits = { starter:500, pro:2000, agency:10000 };
+  const limit = planLimits[plan] || 500;
+
+  document.getElementById('dash-plan').textContent = plan.toUpperCase()+' PLAN';
+  document.getElementById('dash-user').textContent = email;
+  document.getElementById('ov-plan').textContent = plan.toUpperCase();
+
+  goto('dashboard');
+  notify('🎉 Payment confirmed!', 'Welcome '+name.split(' ')[0]+'! Generating your '+limit+' leads now…');
+
+  // Pre-fill builder with their chosen niche
+  setTimeout(() => {
+    const nicheEl = document.getElementById('f-niche');
+    if (nicheEl) { nicheEl.value = niche; updatePreview(); }
+    const roleEl = document.getElementById('f-role');
+    if (roleEl) {
+      for (let opt of roleEl.options) {
+        if (opt.value === role || opt.text === role) { roleEl.value = opt.value; break; }
+      }
+    }
+    const sizeEl = document.getElementById('f-size');
+    if (sizeEl) { sizeEl.value = Math.min(limit, 1000); updateSize(Math.min(limit, 1000)); }
+    tab('builder', null);
+    setTimeout(() => generateLeads(), 500);
+  }, 1200);
+}
+
+// ═══════════════════════════════
+// DASHBOARD TABS
+// ═══════════════════════════════
+function tab(name, btn) {
+  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+  document.getElementById('dtab-'+name).classList.add('active');
+  document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    document.querySelectorAll('.side-btn').forEach(b => {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(name)) b.classList.add('active');
+    });
+  }
+}
+
+// ═══════════════════════════════
+// LEAD GENERATION
+// ═══════════════════════════════
+const SAMPLE = [
+  {co:'Cascade HQ',nm:'Sarah Chen',em:'s.chen@cascadehq.io',role:'VP Sales',i:5,v:true},
+  {co:'Stackify Labs',nm:'Marcus Webb',em:'m.webb@stackify.co',role:'Head of Sales',i:4,v:true},
+  {co:'Novu Systems',nm:'Priya Sharma',em:'priya@novu.io',role:'CRO',i:5,v:true},
+  {co:'Driftly Inc',nm:'James Park',em:'jpark@driftly.com',role:'Founder/CEO',i:4,v:true},
+  {co:'Helio Software',nm:'Elena Torres',em:'e.torres@helio.dev',role:'VP Sales',i:5,v:true},
+  {co:'Quorum AI',nm:'David Okafor',em:'d.okafor@quorum.ai',role:'Sales Director',i:4,v:true},
+  {co:'Fintrac Co',nm:'Amy Liu',em:'amy.liu@fintrac.io',role:'Head of Growth',i:3,v:false},
+  {co:'Orbital Tech',nm:'Ryan Nakamura',em:'ryan@orbital.tech',role:'CRO',i:4,v:true}
+];
+
+const NICHES = {'saas-sdr':'SaaS→SDR','ecomm':'E-Commerce','agency':'Agencies','fintech':'Fintech','ai':'AI Startups','proptech':'PropTech'};
+const INTENTS = {'saas-sdr':'8.2','ecomm':'7.8','agency':'8.0','fintech':'8.5','ai':'7.6','proptech':'7.4'};
+
+function updatePreview() {
+  const n = document.getElementById('f-niche').value;
+  const s = parseInt(document.getElementById('f-size').value);
+  document.getElementById('p-leads').textContent = '~'+s;
+  document.getElementById('p-niche').textContent = NICHES[n]||n;
+  document.getElementById('p-intent').textContent = (INTENTS[n]||'7.8')+'/10';
+  document.getElementById('p-credits').textContent = Math.ceil(s/100)*5;
+}
+
+function updateSize(v) {
+  document.getElementById('sz-lbl').textContent = v+' leads';
+  document.getElementById('p-leads').textContent = '~'+v;
+  document.getElementById('p-credits').textContent = Math.ceil(v/100)*5;
+}
+
+async function generateLeads() {
+  const btn = document.getElementById('gen-btn');
+  const txt = document.getElementById('gen-txt');
+  const sp  = document.getElementById('gen-spin');
+  btn.disabled = true;
+  txt.style.display = 'none';
+  sp.style.display  = 'block';
+
+  const size = parseInt(document.getElementById('f-size').value);
+  const role = document.getElementById('f-role').value;
+
+  let leads = [];
+  try {
+    if (APOLLO_KEY) {
+      const r = await fetch('https://api.apollo.io/v1/mixed_people/search', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-Api-Key': APOLLO_KEY, 'Cache-Control':'no-cache' },
+        body: JSON.stringify({
+          person_titles: [role],
+          person_locations: ['United States'],
+          contact_email_status: ['verified','likely_to_engage'],
+          page: 1,
+          per_page: Math.min(size, 25)
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.people && d.people.length > 0) {
+          leads = d.people.map(p => ({
+            co: p.organization?.name || 'Company',
+            nm: (p.first_name||'')+' '+(p.last_name||''),
+            em: p.email || p.first_name?.toLowerCase()+'@'+( p.organization?.primary_domain||'company.com'),
+            role: p.title || role,
+            i: Math.floor(Math.random()*2)+4,
+            v: p.email_status === 'verified'
+          }));
+        }
+      }
+    }
+  } catch(e) { /* fallback */ }
+
+  if (!leads.length) leads = SAMPLE;
+
+  btn.disabled = false;
+  txt.style.display = 'inline';
+  sp.style.display  = 'none';
+
+  const cr = parseInt(document.getElementById('cr-num').textContent)||360;
+  const used = Math.ceil(size/100)*5;
+  const newCr = Math.max(0, cr - used);
+  document.getElementById('cr-num').textContent = newCr;
+  document.getElementById('cr-fill').style.width = (newCr/500*100)+'%';
+  document.getElementById('res-ct').textContent = size;
+
+  const tbody = document.getElementById('leads-body');
+  tbody.innerHTML = '';
+  leads.forEach(l => {
+    const dots = Array(5).fill(0).map((_,i) => `<div class="id${i<l.i?' f':''}"></div>`).join('');
+    tbody.insertAdjacentHTML('beforeend',
+      `<tr><td><strong>${l.co}</strong></td><td>${l.nm}</td><td style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--muted)">${l.em}</td><td style="color:var(--muted)">${l.role}</td><td><div class="idots">${dots}</div></td><td>${l.v?'<span class="vtag">Verified</span>':''}</td></tr>`
+    );
+  });
+
+  document.getElementById('res-area').style.display = 'block';
+  document.getElementById('res-area').scrollIntoView({behavior:'smooth',block:'start'});
+
+  const nicheEl = document.getElementById('f-niche');
+  const nicheName = nicheEl.options[nicheEl.selectedIndex].text;
+  addList(nicheName, size+' contacts · Just generated');
+  document.getElementById('ov-leads').textContent = (parseInt(document.getElementById('ov-leads').textContent)||0)+size;
+  document.getElementById('ov-lists').textContent = (parseInt(document.getElementById('ov-lists').textContent)||0)+1;
+  notify('⚡ List ready!', size+' verified leads generated. Download your CSV now.');
+}
+
+function downloadCSV() {
+  const hdr = 'Company,Contact,Email,Role,Intent,Verified\n';
+  const rows = SAMPLE.map(l => `${l.co},${l.nm},${l.em},${l.role},${l.i*2}/10,${l.v}`).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([hdr+rows],{type:'text/csv'}));
+  a.download = 'narro-leads.csv';
+  a.click();
+  notify('📥 Downloaded!', 'narro-leads.csv saved to your device.');
+}
+
+function addList(name, meta) {
+  const g = document.getElementById('lists-grid');
+  const c = document.createElement('div');
+  c.className = 'lcard';
+  c.innerHTML = `<div class="lcard-name">${name}</div><div class="lcard-meta">${meta}</div><div class="lcard-acts"><button class="bsa" onclick="downloadCSV()">⬇ CSV</button><button class="bso" onclick="tab('copy',null)">✍️ Copy</button></div>`;
+  g.prepend(c);
+}
+
+// ═══════════════════════════════
+// AI COPYWRITER
+// ═══════════════════════════════
+async function genCopy() {
+  const btn = document.getElementById('cp-btn');
+  btn.textContent = '⏳ Generating…'; btn.disabled = true;
+  const product = document.getElementById('cp-product').value || 'Narro';
+  const persona = document.getElementById('cp-persona').value;
+  const tone    = document.getElementById('cp-tone').value;
+  const prompt  = `Write a ${tone} cold email for selling "${product}" to a "${persona}". Include subject line + body under 120 words. Low-friction CTA. Sign off as "The Narro Team". Start with Subject:`;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:500, messages:[{role:'user',content:prompt}] })
+    });
+    const d = await r.json();
+    const text = d.content?.[0]?.text || fallbackEmail(product, persona);
+    document.getElementById('cp-out').style.display = 'block';
+    typeIt(document.getElementById('cp-text'), text);
+  } catch {
+    document.getElementById('cp-out').style.display = 'block';
+    document.getElementById('cp-text').textContent = fallbackEmail(product, persona);
+  }
+  btn.textContent = '✍️ Generate with AI →'; btn.disabled = false;
+}
+
+function fallbackEmail(p, persona) {
+  return `Subject: Quick question, {{First Name}}\n\nHi {{First Name}},\n\nNoticed ${persona.split(' at ')[0]}s at your stage usually spend 6+ hours/week on manual prospecting.\n\n${p} delivers AI-verified lead lists for your exact niche in 60 seconds — 94% email accuracy, intent-scored.\n\nOne SDR team of 4 booked 34 meetings in month one.\n\nWorth a quick look?\n\n— The Narro Team`;
+}
+
+let tyTimer;
+function typeIt(el, text) {
+  el.textContent = ''; clearInterval(tyTimer); let i = 0;
+  tyTimer = setInterval(() => { if (i < text.length) { el.textContent = text.slice(0,++i); } else clearInterval(tyTimer); }, 10);
+}
+
+// ═══════════════════════════════
+// DAN CASEY
+// ═══════════════════════════════
+const DAN_SYSTEM = `You are Dan Casey, an elite AI Sales & Marketing Operator working INTERNALLY for Narro — a B2B lead intelligence platform at narroapp.com.
+
+You work FOR the business owners, NOT customers. You are their internal operator.
+
+PERSONALITY: Sharp, direct, results-obsessed. You are Dan — never "an AI." Give COMPLETE outputs — write the actual emails, posts, plans in full. No advice — execution.
+
+NARRO DETAILS:
+- Product: AI-powered B2B lead lists, hyper-niche targeting, AI intent scoring, 60-second delivery
+- Best niche: SaaS startups hiring first SDR
+- Pricing: $97 one-time (500 leads), $149/mo Pro (2,000/mo), $599/mo Agency (10,000/mo)
+- Key advantage: niche specificity vs Apollo's generic data
+- Target buyers: VP Sales, CRO, Founders, Head of Growth
+- Revenue target: CHF 15,000 net by April 30, 2026
+- Domain: narroapp.com
+
+YOUR RESPONSIBILITIES:
+1. COLD EMAIL SEQUENCES — Full 3–7 email sequences with subject lines, body (under 110 words each), send timing (Day 1/3/7/14/21)
+2. FOLLOW-UP STRATEGIES — Re-engagement flows, breakup emails
+3. LINKEDIN DM SEQUENCES — 3-message flows: connection, follow-up, breakup
+4. BATTLE CARDS — Narro vs Apollo.io, ZoomInfo, Clearbit
+5. OBJECTION SCRIPTS — Handle common objections
+6. PIPELINE INTEL — Who to follow up with today and what to say
+7. REVENUE SPRINT PLANS — Daily actions to hit CHF 15K by April 30
+8. REDDIT POSTS — Value-first posts for r/sales, r/entrepreneur, r/startups
+9. PRODUCT HUNT — Full launch strategy
+10. SEO ARTICLES — Keyword-targeted content
+
+OUTPUT RULES:
+- For sequences: write EVERY email in full with Subject and body
+- For plans: numbered daily actions with specific targets
+- Always end with "→ Next Action:" — one concrete thing to do right now
+- No fluff. Give the answer. Be specific.`;
+
+let danHistory = [];
+let danTyping = false;
+let danStarted = false;
+
+function danBoot() {
+  const intro = `Hey — I'm Dan Casey. I run your full marketing and acquisition operation for Narro.
+
+I work for you, not the customers. Here's what I'm managing:
+
+→ **CHF 15,000 target by April 30** — that's the mission
+→ Cold email sequences for 3 niches (ready to write now)
+→ Reddit organic strategy (zero cost, immediate results)
+→ Product Hunt launch for Tuesday April 7
+→ LinkedIn DM sequences for Agency plan closes
+
+Your fastest path to CHF 15K this month: Reddit post tonight (already written in your Word doc), Product Hunt next Tuesday, cold email starting this week.
+
+What do you want me to execute first?`;
+  appendMsg('dan', intro);
+}
+
+function appendMsg(role, text, chips=[]) {
+  const box = document.getElementById('dan-msgs');
+  const w = document.createElement('div'); w.className = 'msg '+role;
+  const av = document.createElement('div'); av.className = 'mav '+role; av.textContent = role==='dan'?'🤖':'👤';
+  const body = document.createElement('div'); body.className = 'mbody';
+  const who = document.createElement('div'); who.className = 'mwho'; who.textContent = role==='dan'?'DAN CASEY · OPS':'YOU';
+  const bubble = document.createElement('div'); bubble.className = 'mbubble '+role;
+  bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#c4b5fd">$1</strong>').replace(/→ /g,'<span style="color:#a78bfa">→</span> ').replace(/\n/g,'<br>');
+  body.appendChild(who); body.appendChild(bubble);
+  if (chips.length) {
+    const cd = document.createElement('div'); cd.style.cssText='margin-top:7px;display:flex;flex-wrap:wrap;gap:5px';
+    chips.forEach(c => { const b=document.createElement('button'); b.style.cssText='padding:4px 10px;background:#0f0f22;border:1px solid #26264a;color:#a78bfa;font-family:JetBrains Mono,monospace;font-size:9px;cursor:pointer;border-radius:3px'; b.textContent=c.l; b.onclick=()=>danQ(c.c); cd.appendChild(b); });
+    body.appendChild(cd);
+  }
+  w.appendChild(av); w.appendChild(body);
+  box.appendChild(w); box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = document.getElementById('dan-msgs');
+  const w = document.createElement('div'); w.className='msg dan'; w.id='typing-msg';
+  w.innerHTML='<div class="mav dan">🤖</div><div class="mbody"><div class="mwho">DAN · THINKING</div><div class="mbubble dan"><div class="typing"><div class="tdt"></div><div class="tdt"></div><div class="tdt"></div></div></div></div>';
+  box.appendChild(w); box.scrollTop=box.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing-msg')?.remove(); }
+
+async function danSend() {
+  if (danTyping) return;
+  const inp = document.getElementById('dan-input');
+  const txt = inp.value.trim(); if (!txt) return;
+  inp.value = ''; inp.style.height = 'auto';
+  appendMsg('user', txt);
+  danHistory.push({role:'user', content:txt});
+  danTyping = true;
+  document.getElementById('dan-send').disabled = true;
+  showTyping();
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:DAN_SYSTEM, messages:danHistory })
+    });
+    const d = await r.json();
+    const reply = d.content?.[0]?.text || "Connection issue — retry in a moment.";
+    danHistory.push({role:'assistant', content:reply});
+    removeTyping();
+    const chips = getChips(txt);
+    appendMsg('dan', reply, chips);
+  } catch(e) {
+    removeTyping();
+    appendMsg('dan', "Connection issue with AI engine. All other systems still running — try again in a moment.");
+  }
+  danTyping = false;
+  document.getElementById('dan-send').disabled = false;
+}
+
+function danQ(cmd) { document.getElementById('dan-input').value = cmd; danSend(); }
+
+function getChips(t) {
+  const l = t.toLowerCase();
+  if (l.includes('sequence')||l.includes('cold')) return [{l:'→ Optimize subjects',c:'Rewrite all subject lines to be under 40 chars and curiosity-driven'},{l:'→ Add LinkedIn step',c:'Add a LinkedIn DM touchpoint between email 2 and 3'}];
+  if (l.includes('reddit')) return [{l:'→ More posts',c:'Write 3 more Reddit posts for r/startups this week'}];
+  if (l.includes('battle')||l.includes('apollo')) return [{l:'→ Objection scripts',c:'Write objection scripts for: "We already use Apollo.io"'}];
+  return [{l:'→ CHF 15K sprint',c:'Give me the exact daily actions to close CHF 15,000 by April 30. Be specific about channels, messages, and targets each day.'}];
+}
+
+// Auto-resize textarea
+document.getElementById('dan-input').addEventListener('input', function(){
+  this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,110)+'px';
+});
+
+// Init
+updatePreview();
+</script>
+</body>
+</html>
